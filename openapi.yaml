@@ -1,0 +1,265 @@
+openapi: 3.0.0
+info:
+  title: CrowdCraft Settings Service
+  description: Settings Service for CrowdCraft
+  version: 1.0.0
+servers:
+  - url: http://localhost:3008/crowdcraft-settings-service/v1
+  - url: https://test-api.crowdcraft.io/crowdcraft-settings-service/v1
+security:
+  - bearerAuth: []
+paths:
+
+  /settings/update:
+    put:
+      tags:
+        - settings
+      summary: Create or update
+      description: Create or update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSettingsRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSettingsResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /settings/retrieve-all:
+    get:
+      tags:
+        - settings
+      summary: Retrieve all created by calling user
+      description: Retrieve all created by calling user
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetrieveAllResponse'
+  
+  /settings/details/{settingsId}:
+    get:
+      tags:
+        - settings
+      summary: Details of settings
+      description: Details of settings
+      parameters:
+        - in: path
+          name: settingsId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Settings ID
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailsResponse'
+
+  /settings/delete/{settingsId}:
+    post:
+      tags:
+        - settings
+      summary: Delete
+      description: Delete
+      parameters:
+        - in: path
+          name: settingsId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Settings ID
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  schemas:
+    SettingsTypeEnum:
+      type: string
+      enum:
+        - STORAGE_CONNECTION
+    ConnectionTypeEnum:
+      type: string
+      enum:
+        - GIT
+        - S3
+        - GCP
+        - AZURE
+    SettingsId:
+      type: string
+      format: uuid
+    Url:
+      type: string
+      format: uri
+      minLength: 3
+      maxLength: 8000
+
+    BaseSettings:
+      type: object
+      required:
+        - nickname
+        - settingsType
+        - data
+      properties:
+        nickname:
+          type: string
+          minLength: 3
+          maxLength: 80
+        settingsType:
+          $ref: '#/components/schemas/SettingsTypeEnum'
+        data:
+          $ref: "#/components/schemas/SettingsData"
+    
+    S3Data:
+      type: object
+      description: S3 or AWS bucket settings
+      required:
+        - connectionType
+        - bucketName
+        - accessKeyId
+        - accessSecretKey
+        - url
+      properties:
+        connectionType:
+          $ref: '#/components/schemas/ConnectionTypeEnum'
+        bucketName:
+          type: string
+          minLength: 1
+          maxLength: 500
+        accessKeyId:
+          type: string
+          minLength: 1
+        accessSecretKey:
+          type: string
+          minLength: 1
+        url:
+          $ref: '#/components/schemas/Url'
+    
+    GitData:
+      type: object
+      description: Git repository settings
+      required:
+        - connectionType
+        - branch
+        - folderPath
+        - gitAuthType
+        - url
+      properties:
+        connectionType:
+          $ref: '#/components/schemas/ConnectionTypeEnum'
+        branch:
+          type: string
+          example: main
+          minLength: 1
+          maxLength: 500
+        folderPath:
+          type: string
+          example: /folder1/myfav
+          default: /
+          maxLength: 4096
+        gitAuthType:
+          type: string
+          enum:
+            - PASSWORD
+            - SSH_PRIVATE_KEY
+        username:
+          type: string
+          maxLength: 500
+        password:
+          type: string
+          maxLength: 500
+        sshPrivateKey:
+          type: string
+        url:
+          $ref: '#/components/schemas/Url'
+    
+    SettingsData:
+      oneOf:
+        - $ref: "#/components/schemas/S3Data"
+        - $ref: "#/components/schemas/GitData"
+      discriminator:
+        propertyName: connectionType
+        mapping:
+          S3: "#/components/schemas/S3Data"
+          GIT: "#/components/schemas/GitData"
+
+
+    CreateSettingsRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseSettings'
+      type: object
+      properties:
+        settingsId:
+          $ref: '#/components/schemas/SettingsId'
+
+    CreateSettingsResponse:
+      type: object
+      properties:
+        settingsId:
+          $ref: '#/components/schemas/SettingsId'
+
+    RetrieveAllResponse:
+      type: object
+      properties:
+        settingss:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/BaseSettings'
+            properties:  
+              settingsId:
+                $ref: '#/components/schemas/SettingsId'
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+    
+    DetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseSettings'
+      type: object
+      properties:
+        settingsId:
+          $ref: '#/components/schemas/SettingsId'
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: WORKERR001
+        message:
+          type: string
+          example: "Internal Error"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

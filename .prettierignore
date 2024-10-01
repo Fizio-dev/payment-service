@@ -1,0 +1,6 @@
+coverage
+dist
+node_modules
+templates
+src/generated
+package-lock.json

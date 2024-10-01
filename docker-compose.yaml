@@ -1,0 +1,68 @@
+services:
+
+  # Postgres
+  pg:
+    image: postgres:15.6
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: crowdcraft
+      POSTGRES_USER: pg
+      POSTGRES_PASSWORD: pg
+      PG_USER: pg
+    command: [ "postgres", "-c", "log_statement=all" ]
+    volumes:
+      - pg_data:/var/lib/postgresql/data # Persist Postgres data
+      - ../../migrations/settings-server/v1.0.0_init.sql:/docker-entrypoint-initdb.d/v1.0.0_init.sql
+    healthcheck:
+      test: pg_isready -U pg -d crowdcraft
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_USERNAME=default
+      - REDIS_PASSWORD=redis
+    command: '--requirepass redis --loglevel notice'
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Rabbit MQ
+  rabbitmq:
+    image: rabbitmq:3.13.1-management
+    ports:
+      - "5672:5672"  # RabbitMQ default port
+      - "15672:15672"  # RabbitMQ management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: mq
+      RABBITMQ_DEFAULT_PASS: mq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Persist RabbitMQ data
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+networks:
+  dependencies:
+    name: crowdcraft
+    driver: bridge
+
+volumes:
+  pg_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+
+secrets:
+  package_registry_token:
+    environment: "PACKAGE_REGISTRY_TOKEN" # this needs to be exported before you can run docker-compose
