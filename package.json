@@ -1,5 +1,5 @@
 {
-    "name": "settings-server",
+    "name": "payments-server",
     "version": "1.0.0",
     "description": "CrowdCraft Settings Service",
     "module": "dist/server.mjs",
