@@ -8,45 +8,39 @@ import { config } from '@/config';
 import IOCRegistry from '@/ioc-registry';
 import { globalErrorHandler, unmappedPathsHandler } from '@/middleware/errors';
 import { morganMiddleware } from '@/middleware/morgan';
-import { routes } from '@/routes/payment.routes.ts';
+import { routes } from '@/routes/payment.routes';
+import DB from '@/infrastructure/db';
+import cors from 'cors';
+
 
 const logger = LoggerFactory.getLogger('server');
-// TODO do not log passwords
 
 logger.info(`mode: ${config.env}`);
-logger.info('Application configuration:', config);
 
 const checkConfigIsValid = () => {
-    Object.values(config).forEach((value) => {
-        if (!value) {
-            throw new Error('config is invalid');
-        }
-    });
+  Object.values(config).forEach((value) => {
+    if (!value) {
+      throw new Error('config is invalid');
+    }
+  });
 };
 
 checkConfigIsValid();
 
-// Initialize context
-await IOCRegistry.initialize('server');
+const iocRegistry = await IOCRegistry.getInstance();
+await iocRegistry.getDependency(DB).getPrimaryDataSource().initialize();
 
-// Setup express endpoints
 const app = express();
 
-// parse application/json
 app.use(express.json());
-
-// HTTP logging
 app.use(morganMiddleware);
+app.use(cors());
 
-// routes
 const baseRouter = express.Router();
 app.use(config.basePath, baseRouter);
-
-// set up routes
-routes(baseRouter);
+await routes(app);
 app.use(unmappedPathsHandler, globalErrorHandler);
 
-// port
 app.listen(config.port, () => {
-    logger.info(`[server]: Server is running at port ${config.port}`);
+  logger.info(`[server]: Server is running at port ${config.port}`);
 });

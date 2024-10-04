@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
-        "lib": ["ES2023"],
+        "lib": [
+            "ES2023"
+        ],
         "module": "ES2022",
         "target": "ES2022",
         "strict": false,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "moduleResolution": "Node",  // Changed to Node for module resolution consistency
+        "moduleResolution": "Node", // Changed to Node for module resolution consistency
         "sourceMap": true,
-        "allowImportingTsExtensions": true,
         "allowArbitraryExtensions": true,
         "noEmit": false,
         "checkJs": true,
@@ -25,7 +26,7 @@
         "noImplicitThis": true,
         "alwaysStrict": false,
         "noUnusedLocals": true,
-        "noUnusedParameters": false, 
+        "noUnusedParameters": false,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "forceConsistentCasingInFileNames": true,
@@ -35,16 +36,25 @@
         "strictBindCallApply": true,
         "resolveJsonModule": true,
         "noUncheckedIndexedAccess": true,
-        "typeRoots": ["./node_modules/@types"],
+        "typeRoots": [
+            "./node_modules/@types"
+        ],
         "outDir": "./dist",
-        "baseUrl": "./src",  // Ensure this points to the src folder
+        "baseUrl": "./src", // Ensure this points to the src folder
         "paths": {
-            "@/*": ["*"]  // This maps @/ to the src directory
+            "@/*": [
+                "*"
+            ] // This maps @/ to the src directory
         },
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true
     },
-    "exclude": ["node_modules", "bin", "dist", "**/*.test.ts"],
+    "exclude": [
+        "node_modules",
+        "bin",
+        "dist",
+        "**/*.test.ts"
+    ],
     "buildOptions": {
         "verbose": true,
         "traceResolution": true
