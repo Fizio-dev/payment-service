@@ -1,6 +1,6 @@
 import { statusCodes } from '@/helpers/status-codes';
 
-type ErrorCode = 'NOT_FOUND' | 'INVALID_REQUEST';
+type ErrorCode = 'NOT_FOUND' | 'INVALID_REQUEST' | 'UNKNOWN_ERROR';
 
 export const errorMessages = {
     NOT_FOUND: 'The requested resource was not found',

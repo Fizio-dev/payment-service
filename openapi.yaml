@@ -1,265 +1,517 @@
-openapi: 3.0.0
-info:
-  title: CrowdCraft Settings Service
-  description: Settings Service for CrowdCraft
-  version: 1.0.0
-servers:
-  - url: http://localhost:3008/crowdcraft-settings-service/v1
-  - url: https://test-api.crowdcraft.io/crowdcraft-settings-service/v1
-security:
-  - bearerAuth: []
-paths:
-
-  /settings/update:
-    put:
-      tags:
-        - settings
-      summary: Create or update
-      description: Create or update
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateSettingsRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateSettingsResponse'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /settings/retrieve-all:
-    get:
-      tags:
-        - settings
-      summary: Retrieve all created by calling user
-      description: Retrieve all created by calling user
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RetrieveAllResponse'
-  
-  /settings/details/{settingsId}:
-    get:
-      tags:
-        - settings
-      summary: Details of settings
-      description: Details of settings
-      parameters:
-        - in: path
-          name: settingsId
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: Settings ID
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailsResponse'
-
-  /settings/delete/{settingsId}:
-    post:
-      tags:
-        - settings
-      summary: Delete
-      description: Delete
-      parameters:
-        - in: path
-          name: settingsId
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: Settings ID
-      responses:
-        '200':
-          description: Success
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-
-components:
-  schemas:
-    SettingsTypeEnum:
-      type: string
-      enum:
-        - STORAGE_CONNECTION
-    ConnectionTypeEnum:
-      type: string
-      enum:
-        - GIT
-        - S3
-        - GCP
-        - AZURE
-    SettingsId:
-      type: string
-      format: uuid
-    Url:
-      type: string
-      format: uri
-      minLength: 3
-      maxLength: 8000
-
-    BaseSettings:
-      type: object
-      required:
-        - nickname
-        - settingsType
-        - data
-      properties:
-        nickname:
-          type: string
-          minLength: 3
-          maxLength: 80
-        settingsType:
-          $ref: '#/components/schemas/SettingsTypeEnum'
-        data:
-          $ref: "#/components/schemas/SettingsData"
-    
-    S3Data:
-      type: object
-      description: S3 or AWS bucket settings
-      required:
-        - connectionType
-        - bucketName
-        - accessKeyId
-        - accessSecretKey
-        - url
-      properties:
-        connectionType:
-          $ref: '#/components/schemas/ConnectionTypeEnum'
-        bucketName:
-          type: string
-          minLength: 1
-          maxLength: 500
-        accessKeyId:
-          type: string
-          minLength: 1
-        accessSecretKey:
-          type: string
-          minLength: 1
-        url:
-          $ref: '#/components/schemas/Url'
-    
-    GitData:
-      type: object
-      description: Git repository settings
-      required:
-        - connectionType
-        - branch
-        - folderPath
-        - gitAuthType
-        - url
-      properties:
-        connectionType:
-          $ref: '#/components/schemas/ConnectionTypeEnum'
-        branch:
-          type: string
-          example: main
-          minLength: 1
-          maxLength: 500
-        folderPath:
-          type: string
-          example: /folder1/myfav
-          default: /
-          maxLength: 4096
-        gitAuthType:
-          type: string
-          enum:
-            - PASSWORD
-            - SSH_PRIVATE_KEY
-        username:
-          type: string
-          maxLength: 500
-        password:
-          type: string
-          maxLength: 500
-        sshPrivateKey:
-          type: string
-        url:
-          $ref: '#/components/schemas/Url'
-    
-    SettingsData:
-      oneOf:
-        - $ref: "#/components/schemas/S3Data"
-        - $ref: "#/components/schemas/GitData"
-      discriminator:
-        propertyName: connectionType
-        mapping:
-          S3: "#/components/schemas/S3Data"
-          GIT: "#/components/schemas/GitData"
-
-
-    CreateSettingsRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseSettings'
-      type: object
-      properties:
-        settingsId:
-          $ref: '#/components/schemas/SettingsId'
-
-    CreateSettingsResponse:
-      type: object
-      properties:
-        settingsId:
-          $ref: '#/components/schemas/SettingsId'
-
-    RetrieveAllResponse:
-      type: object
-      properties:
-        settingss:
-          type: array
-          items:
-            allOf:
-              - $ref: '#/components/schemas/BaseSettings'
-            properties:  
-              settingsId:
-                $ref: '#/components/schemas/SettingsId'
-              createdAt:
-                type: string
-                format: date-time
-              updatedAt:
-                type: string
-                format: date-time
-    
-    DetailsResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseSettings'
-      type: object
-      properties:
-        settingsId:
-          $ref: '#/components/schemas/SettingsId'
-
-    ErrorResponse:
-      type: object
-      properties:
-        code:
-          type: string
-          example: WORKERR001
-        message:
-          type: string
-          example: "Internal Error"
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+{
+  "openapi": "3.0.1",
+  "info": { "title": "OpenAPI definition", "version": "v0" },
+  "servers":
+    [{ "url": "http://localhost:8080", "description": "Generated server url" }],
+  "tags":
+    [
+      { "name": "Wallet", "description": "Wallet endpoints" },
+      {
+        "name": "PaymentManagement",
+        "description": "Payment management endpoints",
+      },
+      { "name": "PaymentAccount", "description": "Payment Account endpoints" },
+      { "name": "Health", "description": "Healthcheck" },
+    ],
+  "paths":
+    {
+      "/payments":
+        {
+          "get":
+            {
+              "tags": ["PaymentManagement"],
+              "summary": "List payments by reference ids",
+              "description": "references are set by external services. for example 'contract-{id}'",
+              "operationId": "getReferencePayments",
+              "parameters":
+                [
+                  {
+                    "name": "referenceIds",
+                    "in": "query",
+                    "required": true,
+                    "schema":
+                      { "type": "array", "items": { "type": "string" } },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/PaymentDetails",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+          "post":
+            {
+              "tags": ["PaymentManagement"],
+              "summary": "Create new payment",
+              "operationId": "createPayment",
+              "requestBody":
+                {
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/CreatePaymentRequest",
+                            },
+                        },
+                    },
+                  "required": true,
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/Payment" },
+                            },
+                        },
+                    },
+                },
+            },
+          "patch":
+            {
+              "tags": ["PaymentManagement"],
+              "summary": "Update existing payment",
+              "operationId": "updatePayment",
+              "requestBody":
+                {
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/UpdatePaymentRequest",
+                            },
+                        },
+                    },
+                  "required": true,
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/Payment" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+      "/payments/{id}/cancel":
+        {
+          "post":
+            {
+              "tags": ["PaymentManagement"],
+              "summary": "Cancel a payment",
+              "operationId": "cancelPayment",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "integer", "format": "int64" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/Payment" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+      "/payments/{id}/approve":
+        {
+          "post":
+            {
+              "tags": ["PaymentManagement"],
+              "summary": "Approve a payment",
+              "operationId": "approvePayment",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "integer", "format": "int64" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/Payment" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+      "/paymentAccount/{userId}":
+        {
+          "get":
+            {
+              "tags": ["PaymentAccount"],
+              "summary": "Get users connected payment account",
+              "description": "Success -> account connected. Failure -> account not connected",
+              "operationId": "getPaymentAccount",
+              "parameters":
+                [
+                  {
+                    "name": "userId",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "responses":
+                {
+                  "404": { "description": "Payment account not connected" },
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/PaymentAccount",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+          "post":
+            {
+              "tags": ["PaymentAccount"],
+              "summary": "Get the url for payment account onboarding. Redirect the user to this url immediately, don't share it anywhere else",
+              "description": "Success -> do the redirect. Failure -> something is wrong, contact support",
+              "operationId": "createPaymentAccount",
+              "parameters":
+                [
+                  {
+                    "name": "userId",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "responses":
+                {
+                  "500": { "description": "Internal error, contact support" },
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/CreatePaymentAccountResponse",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+      "/payments/{userId}":
+        {
+          "get":
+            {
+              "tags": ["Wallet"],
+              "summary": "List user payments",
+              "operationId": "getUserPayments",
+              "parameters":
+                [
+                  {
+                    "name": "userId",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "required": true,
+                    "schema": { "type": "integer", "format": "int32" },
+                  },
+                  {
+                    "name": "perPage",
+                    "in": "query",
+                    "required": true,
+                    "schema": { "type": "integer", "format": "int32" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/PaymentDetails",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+      "/payments/{userId}/stats":
+        {
+          "get":
+            {
+              "tags": ["Wallet"],
+              "summary": "Fetch user payment stats",
+              "operationId": "getUserPaymentStats",
+              "parameters":
+                [
+                  {
+                    "name": "userId",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/PaymentStats" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+      "/payments/stats":
+        {
+          "get":
+            {
+              "tags": ["Wallet"],
+              "summary": "Fetch payment stats",
+              "operationId": "getPaymentStats",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/ClientPaymentStats",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+      "/health":
+        {
+          "get":
+            {
+              "tags": ["Health"],
+              "operationId": "all",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "OK",
+                      "content":
+                        {
+                          "*/*":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items": { "type": "string" },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+  "components":
+    {
+      "schemas":
+        {
+          "CreatePaymentRequest":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "userId": { "type": "string" },
+                  "amount": { "type": "integer", "format": "int32" },
+                  "description": { "type": "string" },
+                  "externalId": { "type": "string" },
+                },
+            },
+          "Payment":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "id": { "type": "integer", "format": "int64" },
+                  "userId": { "type": "string" },
+                  "amount": { "type": "integer", "format": "int32" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string" },
+                  "originalAmount": { "type": "integer", "format": "int32" },
+                  "createdAt": { "type": "string", "format": "date-time" },
+                  "releasedAt": { "type": "string", "format": "date-time" },
+                  "approvedAt": { "type": "string", "format": "date-time" },
+                  "updatedAt": { "type": "string", "format": "date-time" },
+                  "paidAt": { "type": "string", "format": "date-time" },
+                  "cancelledAt": { "type": "string", "format": "date-time" },
+                  "createdBy": { "type": "string" },
+                  "updatedBy": { "type": "string" },
+                  "externalId": { "type": "string" },
+                  "payout": { "$ref": "#/components/schemas/Payout" },
+                },
+            },
+          "PaymentAccount":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "id": { "type": "integer", "format": "int64" },
+                  "userId": { "type": "string" },
+                  "accountId": { "type": "string" },
+                  "accountStatus": { "type": "string" },
+                  "createdAt": { "type": "string", "format": "date-time" },
+                  "connectedAt": { "type": "string", "format": "date-time" },
+                },
+            },
+          "Payout":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "id": { "type": "integer", "format": "int64" },
+                  "paymentAccount":
+                    { "$ref": "#/components/schemas/PaymentAccount" },
+                  "createdAt": { "type": "string", "format": "date-time" },
+                  "amount": { "type": "integer", "format": "int32" },
+                  "status": { "type": "string" },
+                  "transferId": { "type": "string" },
+                },
+            },
+          "CreatePaymentAccountResponse":
+            { "type": "object", "properties": { "url": { "type": "string" } } },
+          "UpdatePaymentRequest":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "id": { "type": "integer", "format": "int64" },
+                  "amount": { "type": "integer", "format": "int32" },
+                  "description": { "type": "string" },
+                  "approve": { "type": "boolean" },
+                },
+            },
+          "PaymentDetails":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "id": { "type": "integer", "format": "int64" },
+                  "userId": { "type": "string" },
+                  "amount": { "type": "integer", "format": "int32" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string" },
+                  "externalId": { "type": "string" },
+                  "originalAmount": { "type": "integer", "format": "int32" },
+                  "approvedAt": { "type": "string", "format": "date-time" },
+                  "paidAt": { "type": "string", "format": "date-time" },
+                },
+            },
+          "PaymentStats":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "draftPaymentsAmount":
+                    { "type": "integer", "format": "int32" },
+                  "pendingPaymentsAmount":
+                    { "type": "integer", "format": "int32" },
+                  "totalEarnings": { "type": "integer", "format": "int32" },
+                },
+            },
+          "ClientPaymentStats":
+            {
+              "type": "object",
+              "properties":
+                { "totalExpenses": { "type": "integer", "format": "int32" } },
+            },
+        },
+    },
+}
